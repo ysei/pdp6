@@ -683,6 +683,44 @@ wakepanel(void)
 	SDL_PushEvent(&user_event);
 }
 
+#ifndef SDL_DOUBLEBUF
+#define SDL_DOUBLEBUF 0
+
+static SDL_Renderer *renderer;
+static SDL_Texture *texture;
+
+static SDL_Surface *SDL_SetVideoMode(int width, int height, int depth, int flags)
+{
+  SDL_Window *window;
+  SDL_Surface *screen;
+
+  window = SDL_CreateWindow("PDP-6",
+			    SDL_WINDOWPOS_UNDEFINED,
+			    SDL_WINDOWPOS_UNDEFINED,
+			    width, height, 0);
+
+  screen = SDL_CreateRGBSurface(0, width, height, depth,
+				0, 0, 0, 0);
+  renderer = SDL_CreateRenderer(window, -1, 0);
+
+  return screen;
+}
+
+static SDL_Blit(SDL_Surface *src, SDL_Rect *rect)
+{
+  SDL_Texture *texture = SDL_CreateTextureFromSurface(renderer, src);
+  SDL_RenderCopy(renderer, texture, NULL, rect);
+  SDL_DestroyTexture(texture);
+}
+
+static SDL_Flip(SDL_Surface *screen)
+{
+  SDL_RenderPresent(renderer);
+}
+#else
+#define SDL_Blit(SRC, RECT) SDL_BlitSurface((SRC), NULL, screen, (RECT))
+#endif
+
 int
 main()
 {
@@ -1008,24 +1046,23 @@ error:
 		setlights(apr.rlr, rlr_lght, 8);
 		setlights(apr.rla, rla_lght, 8);
 
-		SDL_BlitSurface(op_surf, NULL, screen, &op_panel);
-		SDL_BlitSurface(ind_surf, NULL, screen, &ind_panel);
-		SDL_BlitSurface(extra_surf, NULL, screen, &extra_panel);
+		SDL_Blit(op_surf, &op_panel);
+		SDL_Blit(ind_surf, &ind_panel);
+		SDL_Blit(extra_surf, &extra_panel);
 		for(i = 0; i < nelem(keys); i++)
-			SDL_BlitSurface(keys[i].surfs[keys[i].state],
-			                NULL, screen, &keys[i].r);
+			SDL_Blit(keys[i].surfs[keys[i].state], &keys[i].r);
 		for(i = 0; i < nelem(op_lights); i++)
-			SDL_BlitSurface(op_lights[i].surfs[op_lights[i].state && apr.sw_power],
-			                NULL, screen, &op_lights[i].r);
+			SDL_Blit(op_lights[i].surfs[op_lights[i].state && apr.sw_power],
+				 &op_lights[i].r);
 		for(i = 0; i < nelem(ind_lights); i++)
-			SDL_BlitSurface(ind_lights[i].surfs[ind_lights[i].state && apr.sw_power],
-			                NULL, screen, &ind_lights[i].r);
+			SDL_Blit(ind_lights[i].surfs[ind_lights[i].state && apr.sw_power],
+				 &ind_lights[i].r);
 		for(i = 0; i < nelem(extra_lights); i++)
-			SDL_BlitSurface(extra_lights[i].surfs[extra_lights[i].state && apr.sw_power],
-			                NULL, screen, &extra_lights[i].r);
+			SDL_Blit(extra_lights[i].surfs[extra_lights[i].state && apr.sw_power],
+				 &extra_lights[i].r);
 		for(i = 0; i < nelem(switches); i++)
-			SDL_BlitSurface(switches[i].surfs[switches[i].state],
-			                NULL, screen, &switches[i].r);
+			SDL_Blit(switches[i].surfs[switches[i].state],
+				 &switches[i].r);
 		SDL_Flip(screen);
 	}
 }
