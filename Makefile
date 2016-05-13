@@ -11,3 +11,5 @@ LIBS=	`sdl-config --libs` `pkg-config SDL_image --libs` -lpthread
 pdp6: $(SRC) pdp6.h
 	$(CC) $(CFLAGS) $(SRC) $(LIBS) -o pdp6
 
+clean:
+	rm pdp6
